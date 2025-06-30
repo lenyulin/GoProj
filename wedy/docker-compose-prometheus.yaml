@@ -1,0 +1,16 @@
+version: "3"
+services:
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+  zipkin:
+    image: openzipkin/zipkin-slim:2.24
+    ports:
+      - '9411:9411'
+  grafana:
+    image: grafana/grafana-enterprise
+    ports:
+      - 3000:3000

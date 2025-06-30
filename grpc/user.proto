@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package="GoProj/grpc";
+
+message User{
+  int64 id =1;
+  string name=2;
+  map<string,string> attributes=5;
+}
+enum Gender{
+  GENDER_UNKNOWN =0;
+  GENDER_MALE=1;
+  GENDER_FEMALE=2;
+}
+service UserService{
+  rpc GetById(GetByIdRequest) returns (GetByIdResponse);
+}
+message GetByIdRequest{
+  int64 id=1;
+}
+message GetByIdResponse{
+  User user=1;
+}

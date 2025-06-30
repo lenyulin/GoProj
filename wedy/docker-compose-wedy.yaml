@@ -1,0 +1,9 @@
+version: "3"
+services:
+  cmd:
+    image: leiyulin/wedy
+    container_name: wedy-container
+    entrypoint:
+      - tail
+      - -f
+      - /dev/null

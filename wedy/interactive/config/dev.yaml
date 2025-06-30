@@ -1,0 +1,15 @@
+redis:
+  addr: "14.103.175.18:6379"
+
+db:
+  dsn: "root:root@tcp(14.103.175.18:3306)/webook"
+
+kafka:
+  addr:
+    - "14.103.175.18:9094"
+
+grpc:
+  server:
+    etcdAddr: "localhost:12379"
+    port: 8090
+    name: "interactive"

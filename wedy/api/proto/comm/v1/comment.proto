@@ -1,0 +1,61 @@
+syntax="proto3";
+
+package comm.v1;
+option go_package="comm/v1;commv1";
+
+service CommentService  {
+  rpc SubmitComment(SubmitCommentRequest) returns (SubmitCommentResponse);
+  rpc GetComment(GetCommentRequest) returns (GetCommentResponse);
+  rpc Like(LikeRequest) returns (LikeResponse);
+}
+
+message LikeRequest{
+  int64 Id=1;
+  int64 VId=2;
+  int64 uid=3;
+}
+message LikeResponse{
+
+}
+message GetCommentRequest{
+  int64 Vid =1;
+  int64 Page=2;
+}
+message GetCommentResponse{
+  repeated Comments comm=1;
+}
+
+message Comments{
+  int64 Id=1;
+  int64 VId=2;
+  string Content=3;
+  int64 Ctime=4;
+  int64 Like=5;
+  int64 Dislike=6;
+  int64 ReplyCount=7;
+  string Picture=8;
+  User User=9;
+  repeated MentionedUser  MentionedUsers=10;
+}
+
+message User{
+  int64 Id=1;
+  string Name=2;
+  string AvatarURL=3;
+}
+
+message SubmitCommentRequest{
+  int64 UserId =1;
+  int64 Vid=2;
+  string Content=3;
+  string UserName=4;
+  string Picture =5;
+  repeated MentionedUser MentionedUsers=6;
+}
+message SubmitCommentResponse{
+
+}
+message MentionedUser{
+  int64 UserId=1;
+  string UserName=2;
+}

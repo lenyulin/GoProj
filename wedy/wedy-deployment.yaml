@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wedy-record-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wedy-record
+  template:
+    metadata:
+      labels:
+        app: wedy-record
+    spec:
+      containers:
+        - name: wedy-record
+          image: leiyulin/wedy:v0.0.1
+          ports:
+            - containerPort: 8080
+
