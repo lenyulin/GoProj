@@ -3,6 +3,7 @@ package web
 import (
 	"GoProj/wedy/comment/domain"
 	"GoProj/wedy/comment/service"
+	"GoProj/wedy/internal/domian"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -45,7 +46,7 @@ func (h *CommentHandler) Submit(ctx *gin.Context) {
 	}
 	usr := ctx.MustGet("user").(UserClaims)
 	err = h.svc.SubmitComment(ctx, domain.Comment{
-		User:    usr.UserId,
+		User:    &domian.User{Id: usr.UserId},
 		Id:      comment.Id,
 		Content: comment.Content,
 		Vid:     comment.Vid,

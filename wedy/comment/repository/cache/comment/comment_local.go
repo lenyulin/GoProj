@@ -41,6 +41,7 @@ type CachedComment struct {
 	count    int64
 	score    *avl.Tree
 }
+
 type localCommentCache struct {
 	mu         sync.RWMutex
 	vComments  map[string]*CachedComment
