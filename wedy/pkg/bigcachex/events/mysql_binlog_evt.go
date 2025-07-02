@@ -6,6 +6,7 @@ import (
 	"GoProj/wedy/pkg/saramax"
 	"context"
 	"github.com/IBM/sarama"
+	"time"
 )
 
 type MysqlBinlogConsumer interface {
@@ -17,13 +18,15 @@ type Consumer struct {
 	consumer sarama.Client
 	log      logger.LoggerV1
 	groupId  string
+	targetDB string
 }
 
-func NewMysqlBinlogConsumer(client sarama.Client, log logger.LoggerV1, groupId string) *Consumer {
+func NewMysqlBinlogConsumer(client sarama.Client, log logger.LoggerV1, groupId string, targetDB string) *Consumer {
 	return &Consumer{
 		consumer: client,
 		log:      log,
 		groupId:  groupId,
+		targetDB: targetDB,
 	}
 }
 func (m *Consumer) Start() error {
@@ -44,6 +47,14 @@ func (m *Consumer) Start() error {
 }
 
 func (m *Consumer) Consume(msg *sarama.ConsumerMessage, val canalx.Message[any]) error {
-	//TODO implement me
-	panic("implement me")
+	if val.Table != m.targetDB {
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	for _, data := range val.Data {
+		//TODO
+		panic("implement me")
+	}
+	return nil
 }
