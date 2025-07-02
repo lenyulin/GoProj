@@ -6,6 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/IBM/sarama v1.45.1
+	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/dlclark/regexp2 v1.11.4
 	github.com/ecodeclub/ekit v0.0.10-0.20250517060535-a7e05db26220
 	github.com/emirpasic/gods v1.18.1
@@ -131,6 +132,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
+	github.com/withlin/canal-go v1.1.2 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect

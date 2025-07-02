@@ -49,4 +49,5 @@ func (h *SeckillHandler) SecKill(ctx *gin.Context) {
 		ctx.String(http.StatusBadRequest, "Internal Server Error")
 		return
 	}
+
 }
