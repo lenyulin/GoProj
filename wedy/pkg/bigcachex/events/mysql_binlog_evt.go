@@ -20,7 +20,7 @@ type MysqlBinlogConsumer interface {
 
 type Consumer struct {
 	consumer sarama.Client
-	cache    bigcachex.BigCachex
+	cache    bigcachex.HybridCache
 	log      logger.LoggerV1
 	groupId  string
 	targetDB string
@@ -34,6 +34,7 @@ func NewMysqlBinlogConsumer(client sarama.Client, log logger.LoggerV1, groupId s
 		targetDB: targetDB,
 	}
 }
+
 func (m *Consumer) Start() error {
 	cg, err := sarama.NewConsumerGroupFromClient(m.groupId, m.consumer)
 	if err != nil {

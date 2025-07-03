@@ -1,11 +1,14 @@
 package bigcachex
 
 import (
+	"GoProj/wedy/pkg/bigcachex/proto"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"github.com/allegro/bigcache/v3"
 	"github.com/redis/go-redis/v9"
+	proto2 "google.golang.org/protobuf/proto"
 	"time"
 )
 
@@ -20,7 +23,7 @@ type redisCache struct {
 	version uint64
 }
 
-func NewBigCachex(redis redis.Cmdable) BigCachex {
+func NewBigCachex(redis redis.Cmdable, biz string, bizId string) HybridCache {
 	cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(10*time.Minute))
 	if err != nil {
 		panic(err)
@@ -28,6 +31,8 @@ func NewBigCachex(redis redis.Cmdable) BigCachex {
 	return &bigcachex{
 		cache: cache,
 		redis: redis,
+		biz:   biz,
+		bizId: bizId,
 	}
 }
 
@@ -59,11 +64,21 @@ func (b *bigcachex) Get(ctx context.Context, key string) ([]byte, error) {
 	return entry, nil
 }
 
+//go:embed update_cache.lua
+var update_cache string
+
 func (b *bigcachex) Set(ctx context.Context, key string, value []byte) error {
 	err := b.cache.Set(key, value)
 	if err != nil {
 		return err
 	}
+	go func() {
+		var act proto.SeckillActivity
+		err := proto2.Unmarshal(value, &act)
+		if err != nil {
+			err = b.redis.Eval(ctx, update_cache, []string{b.bizId}, act.Version, value).Err()
+		}
+	}()
 	return nil
 }
 

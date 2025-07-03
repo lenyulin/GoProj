@@ -10,6 +10,7 @@ message SeckillActivity {
 	int64 Price=7;// 秒杀价格
 	int64 Status=8;// 活动状态（未开始 1/进行中 2/已结束 -1）
 	int64 LimitPerUser=9; // 每人限购数量
-	string Name=10;// 活动名称
+	int64 Version=10;
+	string Name=11;// 活动名称
 }
 //protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative comment.proto
