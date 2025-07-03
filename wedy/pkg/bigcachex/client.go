@@ -6,16 +6,14 @@ import (
 	"fmt"
 	"github.com/allegro/bigcache/v3"
 	"github.com/redis/go-redis/v9"
-	"sync"
 	"time"
 )
 
 type bigcachex struct {
-	cache  *bigcache.BigCache
-	redis  redis.Cmdable
-	rwLock sync.RWMutex
-	biz    string
-	bizId  string
+	cache *bigcache.BigCache
+	redis redis.Cmdable
+	biz   string
+	bizId string
 }
 type redisCache struct {
 	Data    []any
@@ -38,24 +36,18 @@ func (b *bigcachex) Serve() error {
 }
 
 func (b *bigcachex) Shutdown() error {
-	b.rwLock.Lock()
-	defer b.rwLock.Unlock()
 	err := b.cache.Close()
 	return err
 }
 
-func (b *bigcachex) Get(key string) ([]byte, error) {
+func (b *bigcachex) Get(ctx context.Context, key string) ([]byte, error) {
 	entry, err := b.cache.Get(key)
 	if err != nil {
 		if errors.Is(err, bigcache.ErrEntryNotFound) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-			defer cancel()
 			res, err := b.redis.Get(ctx, b.generateKey(key)).Result()
 			if err != nil {
 				return nil, err
 			}
-			b.rwLock.Lock()
-			defer b.rwLock.Unlock()
 			err = b.cache.Set(key, []byte(res))
 			if err != nil {
 				return nil, err
@@ -67,7 +59,7 @@ func (b *bigcachex) Get(key string) ([]byte, error) {
 	return entry, nil
 }
 
-func (b *bigcachex) Set(key string, value []byte) error {
+func (b *bigcachex) Set(ctx context.Context, key string, value []byte) error {
 	err := b.cache.Set(key, value)
 	if err != nil {
 		return err
@@ -75,7 +67,7 @@ func (b *bigcachex) Set(key string, value []byte) error {
 	return nil
 }
 
-func (b *bigcachex) Delete(key string) error {
+func (b *bigcachex) Delete(ctx context.Context, key string) error {
 	err := b.cache.Delete(key)
 	if err != nil {
 		return err
