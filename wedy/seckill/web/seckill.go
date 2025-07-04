@@ -4,8 +4,8 @@ import (
 	"GoProj/wedy/pkg/bigcachex"
 	"GoProj/wedy/pkg/bigcachex/proto"
 	"GoProj/wedy/pkg/limiter"
-	"GoProj/wedy/seckill-system/domain"
-	"GoProj/wedy/seckill-system/service"
+	"GoProj/wedy/seckill/domain"
+	"GoProj/wedy/seckill/service"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	proto2 "google.golang.org/protobuf/proto"
@@ -43,8 +43,9 @@ func (h *SeckillHandler) RegisiterRoutes(server *gin.Engine) {
 
 func (h *SeckillHandler) Placement(ctx *gin.Context) {
 	type ac struct {
-		activityId    string
-		productId     string
+		activityId    int64
+		productId     int64
+		quantity      int64
 		paymentMethod string
 		promoCode     []string
 	}
@@ -62,7 +63,7 @@ func (h *SeckillHandler) Placement(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
-	acInfo, err := h.cache.Get(ctx, req.activityId)
+	acInfo, err := h.cache.Get(ctx, strconv.FormatInt(req.activityId, 10))
 	if err != nil {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
@@ -77,11 +78,23 @@ func (h *SeckillHandler) Placement(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Activity status: not started or ended")
 		return
 	}
-	err = h.svc.Processing(ctx)
+	if req.quantity <= 0 || req.quantity > activity.LimitPerUser {
+		ctx.String(http.StatusOK, "Insufficient quantity")
+		return
+	}
+	orderId, err := h.svc.Processing(ctx, domain.Order{
+		UserId:        usr.UserId,
+		ActivityId:    req.activityId,
+		ProductId:     req.productId,
+		PaymentMethod: req.paymentMethod,
+		PromoCode:     req.promoCode,
+	})
 	if err != nil {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
+	ctx.String(http.StatusOK, orderId)
+	return
 }
 
 // 取消订单
@@ -96,11 +109,13 @@ func (h *SeckillHandler) Cancel(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Too many requests")
 		return
 	}
-	err := h.svc.Cancel(ctx)
+	res, err := h.svc.Cancel(ctx)
 	if err != nil {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
+	ctx.JSON(http.StatusOK, res)
+	return
 }
 
 //查询订单状态
@@ -122,9 +137,11 @@ func (h *SeckillHandler) Status(ctx *gin.Context) {
 		return
 	}
 	o.UserId = usr.UserId
-	err = h.svc.Status(ctx, o)
+	orderStatus, err := h.svc.Status(ctx, o)
 	if err != nil {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
+	ctx.JSON(http.StatusOK, orderStatus)
+	return
 }
