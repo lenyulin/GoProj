@@ -17,10 +17,10 @@ import (
 type SeckillHandler struct {
 	cache   bigcachex.HybridCache
 	limiter limiter.Limiter
-	svc     service.OrderService
+	svc     service.Seckill
 }
 
-func NewSeckillHandler(cache bigcachex.HybridCache, limiter limiter.Limiter, svc service.OrderService) *SeckillHandler {
+func NewSeckillHandler(cache bigcachex.HybridCache, limiter limiter.Limiter, svc service.Seckill) *SeckillHandler {
 	return &SeckillHandler{
 		cache:   cache,
 		limiter: limiter,
@@ -136,7 +136,10 @@ func (h *SeckillHandler) Status(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
-	o.UserId = usr.UserId
+	if o.UserId != usr.UserId {
+		ctx.String(http.StatusOK, "Insufficient user")
+		return
+	}
 	orderStatus, err := h.svc.Status(ctx, o)
 	if err != nil {
 		ctx.String(http.StatusOK, "Internal Server Error")

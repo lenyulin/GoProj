@@ -8,7 +8,7 @@ import (
 )
 
 type OrderService interface {
-	Commit(ctx context.Context, order domain.Order) (string, error)
+	Create(ctx context.Context, order domain.Order) (string, error)
 	Cancel(ctx context.Context) (string, error)
 	Status(ctx context.Context, order domain.Order) (string, error)
 }
@@ -22,13 +22,12 @@ func NewOrderService() OrderService {
 	return &order{}
 }
 
-func (o *order) Commit(ctx context.Context, order domain.Order) (string, error) {
+func (o *order) Create(ctx context.Context, order domain.Order) (string, error) {
 	panic("implement me")
 }
 
 func (o *order) Cancel(ctx context.Context) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	return o.orderRepo.Cancel(ctx)
 }
 
 func (o *order) Status(ctx context.Context, order domain.Order) (string, error) {
