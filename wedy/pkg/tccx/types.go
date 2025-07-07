@@ -1,16 +1,22 @@
 package tccx
 
-import "context"
-
-type TCC interface {
-	Try(ctx context.Context) error
-	Confirm(ctx context.Context) error
-	Cancel(ctx context.Context) error
+type Consumer interface {
+	Start() error
 }
 
-const (
-	AddTransaction = 1 + iota
-	TransactionInProgress
-	TransactionCompleted
-	TransactionFailed
-)
+type TccTransactionEvent struct {
+	TxId      int64
+	partition []string
+	offset    []string
+	timeStamp []int64
+	topic     string
+	retry     int64
+	Order     OrderTX
+}
+type OrderTX struct {
+	OrderId     int64    `json:"orderId"`
+	UserId      int64    `json:"userId"`
+	Mount       int64    `json:"mount"`
+	Quantity    int64    `json:"quantity"`
+	PromoteCode []string `json:"promoteCode"`
+}

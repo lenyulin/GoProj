@@ -4,6 +4,7 @@ import (
 	"GoProj/wedy/pkg/bigcachex"
 	"GoProj/wedy/pkg/bigcachex/proto"
 	"GoProj/wedy/pkg/limiter"
+	"GoProj/wedy/pkg/snowflake"
 	"GoProj/wedy/seckill/domain"
 	"GoProj/wedy/seckill/service"
 	"github.com/gin-gonic/gin"
@@ -82,7 +83,13 @@ func (h *SeckillHandler) Placement(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Insufficient quantity")
 		return
 	}
-	orderId, err := h.svc.Processing(ctx, domain.Order{
+	orderId, err := snowflake.Generate()
+	if err != nil {
+		ctx.String(http.StatusOK, "Internal Server Error")
+		return
+	}
+	res, err := h.svc.Processing(ctx, domain.Order{
+		OrderId:       orderId,
 		UserId:        usr.UserId,
 		ActivityId:    req.activityId,
 		ProductId:     req.productId,
@@ -93,7 +100,7 @@ func (h *SeckillHandler) Placement(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Internal Server Error")
 		return
 	}
-	ctx.String(http.StatusOK, orderId)
+	ctx.String(http.StatusOK, res)
 	return
 }
 

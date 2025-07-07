@@ -35,7 +35,12 @@ func (s *seckill) Processing(ctx context.Context, order domain.Order) (string, e
 	var err error
 	tccId := s.tccIds("Order", order.OrderId, order.ProductId, order.UserId)
 	//Try
-	_ = s.tccManage.AddTcc(ctx, tccId)
+	_ = s.tccManage.AddTcc(ctx, domain.OrderTX{
+		OrderId:     order.OrderId,
+		UserId:      order.UserId,
+		Mount:       order.Quantity,
+		PromoteCode: order.PromoCode,
+	}, tccId)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
