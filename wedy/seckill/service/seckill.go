@@ -5,6 +5,7 @@ import (
 	"GoProj/wedy/seckill/domain"
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 )
 
@@ -18,54 +19,53 @@ type seckill struct {
 	biz          int64
 	bizId        int64
 	log          logger.LoggerV1
-	tccManage    TccWithDrawnManage
+	tccManage    TccManagerService
 	orderSvc     OrderService
 	promoteSvc   PromoteService
 	inventorySvc InventoryService
 }
 
-func (s *seckill) tccIds(transaction string, activityId, productId, userId int64) string {
-	return fmt.Sprintf("%s:%d:%d:%d:%d:%d", transaction, s.biz, s.bizId, activityId, productId, userId)
+func (s *seckill) tccIds(activityId, productId, userId int64) string {
+	return fmt.Sprintf(":%d:%d:%d:%d:%d", s.biz, s.bizId, activityId, productId, userId)
 }
 
 func (s *seckill) Processing(ctx context.Context, order domain.Order) (string, error) {
 	var wg sync.WaitGroup
-	ch := make(chan error, 2)
+	ch := make(chan error, 3)
 	defer close(ch)
-	var err error
-	tccId := s.tccIds("Order", order.OrderId, order.ProductId, order.UserId)
+	tccId := s.tccIds(order.OrderId, order.ProductId, order.UserId)
 	//Try
 	_ = s.tccManage.AddTcc(ctx, domain.OrderTX{
 		OrderId:     order.OrderId,
 		UserId:      order.UserId,
-		Mount:       order.Quantity,
+		Price:       order.Price,
 		PromoteCode: order.PromoCode,
-	}, tccId)
+	}, "seckill"+tccId)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ch <- s.promoteSvc.VerifyCode(ctx, order)
+		ch <- s.promoteSvc.VerifyCode(ctx, tccId, order)
 	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ch <- s.inventorySvc.ReduceInventory(ctx, order)
+		ch <- s.inventorySvc.ReduceInventory(ctx, tccId, order)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ch <- s.orderSvc.Create(ctx, tccId, order)
 	}()
 	wg.Wait()
 	//检查事务是否失败
 	for er := range ch {
 		if er != nil {
-			_ = s.tccManage.Failed(ctx, tccId)
+			_ = s.tccManage.Failed(ctx, "seckill"+tccId)
 			return "", er
 		}
 	}
-	orderId, err := s.orderSvc.Create(ctx, order)
-	if err != nil {
-		_ = s.tccManage.Failed(ctx, tccId)
-		return "", err
-	}
-	_ = s.tccManage.Succeed(ctx, tccId)
-	return orderId, nil
+	_ = s.tccManage.Succeed(ctx, "seckill"+tccId)
+	return strconv.FormatInt(order.OrderId, 10), nil
 }
 
 func (s *seckill) Cancel(ctx context.Context) (string, error) {

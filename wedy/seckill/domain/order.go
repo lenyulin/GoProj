@@ -6,6 +6,7 @@ type Order struct {
 	ActivityId    int64
 	ProductId     int64
 	Quantity      int64
+	Price         float64
 	PaymentMethod string
 	PromoCode     []string
 }

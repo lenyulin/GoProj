@@ -7,10 +7,15 @@ import (
 	"GoProj/wedy/pkg/tccx"
 	"context"
 	"github.com/IBM/sarama"
-	"strconv"
 )
 
-const TccTransactionWatchTopic = "seckill_tcc_transaction_watch"
+const (
+	TccTransactionWatchTopic = "seckill_tcc_transaction_watch"
+	SubmitCancelRequest      = "SubmitCancelRequest"
+	AddTransaction           = "AddTransaction"
+	TransactionComplete      = "TransactionComplete"
+	TransactionFailed        = "TransactionFailed"
+)
 
 type CommentWatchEventConsumer struct {
 	client  sarama.Client
@@ -25,7 +30,7 @@ func NewInteractiveWatchEventConsumer(repo repository.CommentRepository, client 
 	}
 }
 func (i *CommentWatchEventConsumer) Start() error {
-	cg, err := sarama.NewConsumerGroupFromClient("comment", i.client)
+	cg, err := sarama.NewConsumerGroupFromClient("Seckill_Order", i.client)
 	if err != nil {
 		return err
 	}
@@ -44,26 +49,20 @@ func (i *CommentWatchEventConsumer) Start() error {
 func (i *CommentWatchEventConsumer) Consume(msg *sarama.ConsumerMessage, event tccx.TccTransactionEvent) error {
 	//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	//defer cancel()
-	//txID, txStatus, ttl := i.parseHeaders(msg.Headers)
-	//return i.manager.Process(ctx, ,,,event.Order)
-	panic("TODO")
-}
-func (i *CommentWatchEventConsumer) parseHeaders(headers []sarama.RecordHeader) (txID, txStatus string, ttl int) {
-	for _, header := range headers {
-		key := string(header.Key)
-		value := string(header.Value)
-
-		switch key {
-		case "tx_id":
-			txID = value
-		case "tx_staus": // 注意：生产者代码中这里有拼写错误，应该是"tx_status"
-			txStatus = value
-		case "ttl":
-			ttl, _ = strconv.Atoi(value) // 忽略转换错误，默认为0
-		}
-	}
-
-	return
+	//for _, header := range msg.Headers {
+	//	if string(header.Key) == "ttl" {
+	//		ttl, _ = strconv.ParseInt(string(header.Value), 10, 64)
+	//	}
+	//}
+	//txID, txStatus, ttl := string(msg.Value[0]), string(msg.Value[1]), int64(msg.Value[2])
+	//switch txStatus {
+	//case TransactionFailed:
+	//case SubmitCancelRequest:
+	//case AddTransaction:
+	//case TransactionComplete:
+	//}
+	//TODO Implement me
+	panic("implement me")
 }
 
 //func (i *CommentWatchEventConsumer) StartBatch() error {

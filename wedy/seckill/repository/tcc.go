@@ -26,7 +26,7 @@ func (t *tcc) toTxDAO(src domain.OrderTX) dao.OrderTXDAO {
 	return dao.OrderTXDAO{
 		OrderId:     src.OrderId,
 		UserId:      src.UserId,
-		Mount:       src.Mount,
+		Price:       src.Price,
 		Quantity:    src.Quantity,
 		PromoteCode: src.PromoteCode,
 	}
