@@ -13,6 +13,8 @@ type OrderService interface {
 	Status(ctx context.Context, order domain.Order) (string, error)
 }
 
+const BizId = "order"
+
 type order struct {
 	log        logger.LoggerV1
 	orderRepo  repository.OrderRepository
@@ -31,16 +33,16 @@ func (o *order) Create(ctx context.Context, tccId string, order domain.Order) er
 		Quantity:    order.Quantity,
 		PromoteCode: order.PromoCode,
 	}
-	err := o.tccManager.AddTcc(ctx, orderTx, "order"+tccId)
+	err := o.tccManager.AddTcc(ctx, orderTx, BizId+tccId)
 	if err != nil {
 		return err
 	}
 	_, err = o.orderRepo.Create(ctx, order)
 	if err != nil {
-		err = o.tccManager.Failed(ctx, "order"+tccId)
+		err = o.tccManager.Failed(ctx, BizId+tccId)
 		return err
 	}
-	err = o.tccManager.Succeed(ctx, "order"+tccId)
+	err = o.tccManager.Succeed(ctx, BizId+tccId)
 	return err
 }
 
