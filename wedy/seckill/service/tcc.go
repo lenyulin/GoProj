@@ -64,6 +64,7 @@ func (t *tcc) AddTcc(ctx context.Context, order domain.OrderTX, id string) error
 	}
 	err = t.localMessageTable.Set("id", lTx)
 	if err != nil {
+		//retry?
 		return err
 	}
 	err = t.repo.AddTcc(ctx, order, id)

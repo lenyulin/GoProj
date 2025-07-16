@@ -42,7 +42,7 @@ func (m *Consumer) Start() error {
 	}
 	go func() {
 		err := cg.Consume(context.Background(),
-			[]string{"wedy_seckill"},
+			[]string{"seckill_current_activity_binlog"},
 			saramax.NewHandler[canalx.Message[proto.SeckillActivity]](m.log, m.Consume),
 		)
 		if err != nil {
@@ -58,8 +58,16 @@ func (m *Consumer) Consume(msg *sarama.ConsumerMessage, val canalx.Message[proto
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	for _, data := range val.Data {
-		d, err := proto2.Marshal(&data)
+	for i := range val.Data {
+		data := &val.Data[i]
+		//已结束删除缓存
+		if data.Status == -1 {
+			err := m.cache.Delete(ctx, strconv.FormatInt(data.ID, 10))
+			if err != nil {
+				return err
+			}
+		}
+		d, err := proto2.Marshal(data)
 		if err != nil {
 			return err
 		}
