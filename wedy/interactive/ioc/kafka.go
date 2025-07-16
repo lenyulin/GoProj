@@ -21,7 +21,7 @@ func InitSaramaClient() sarama.Client {
 		Addr []string
 	}
 	var cfg Config
-	cfg.Addr = []string{"14.103.175.18:9094"}
+	cfg.Addr = []string{"127.0.0.1:9094"}
 	err := viper.UnmarshalKey("kafka", &cfg)
 	if err != nil {
 		panic(err)

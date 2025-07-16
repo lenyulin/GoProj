@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var addr = []string{"14.103.175.18:9094"}
+var addr = []string{"127.0.0.1:9094"}
 
 func TestKafkaSyncProducer(t *testing.T) {
 	cfg := sarama.NewConfig()

@@ -18,7 +18,7 @@ func InitMongoDB() *mongo.Database {
 		},
 	}
 	opts := options.Client().
-		ApplyURI("mongodb://14.103.175.18:27017/").
+		ApplyURI("mongodb://127.0.0.1:27017/").
 		SetMonitor(monitor)
 	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
