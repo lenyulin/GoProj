@@ -3,10 +3,11 @@ package service
 import (
 	"GoProj/wedy/pkg/logger"
 	"GoProj/wedy/seckill/domain"
+	tcc3 "GoProj/wedy/seckill/pkg/infrastructure/adapter/tcc"
+	"GoProj/wedy/seckill/pkg/tcc"
 	"context"
 	"fmt"
-	"strconv"
-	"sync"
+	"time"
 )
 
 type Seckill interface {
@@ -16,56 +17,33 @@ type Seckill interface {
 }
 
 type seckill struct {
-	biz          int64
-	bizId        int64
-	log          logger.LoggerV1
-	tccManage    TccManagerService
-	orderSvc     OrderService
-	promoteSvc   PromoteService
-	inventorySvc InventoryService
+	biz           int64
+	bizId         int64
+	log           logger.LoggerV1
+	stockAdapter  *tcc3.InventoryAdapter
+	couponAdapter *tcc3.CouponAdapter
+	orderAdapter  *tcc3.OrderAdapter
+	tccManager    tcc.TCCManager
 }
 
-func (s *seckill) tccIds(activityId, productId, userId int64) string {
-	return fmt.Sprintf(":%d:%d:%d:%d:%d", s.biz, s.bizId, activityId, productId, userId)
+func (s *seckill) tccIds(orderId int64) string {
+	return fmt.Sprintf(":%d:%d:%d", s.biz, s.bizId, orderId)
 }
 
 func (s *seckill) Processing(ctx context.Context, order domain.Order) (string, error) {
-	var wg sync.WaitGroup
-	ch := make(chan error, 3)
-	defer close(ch)
-	tccId := s.tccIds(order.OrderId, order.ProductId, order.UserId)
-	//Try
-	_ = s.tccManage.AddTcc(ctx, domain.OrderTX{
-		OrderId:     order.OrderId,
-		UserId:      order.UserId,
-		Price:       order.Price,
-		PromoteCode: order.PromoCode,
-	}, "seckill"+tccId)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ch <- s.promoteSvc.VerifyCode(ctx, tccId, order)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ch <- s.inventorySvc.ReduceInventory(ctx, tccId, order)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ch <- s.orderSvc.Create(ctx, tccId, order)
-	}()
-	wg.Wait()
-	//检查事务是否失败
-	for er := range ch {
-		if er != nil {
-			_ = s.tccManage.Failed(ctx, "seckill"+tccId)
-			return "", er
-		}
+	gtid := s.tccIds(order.OrderId)
+	_ = s.tccManager.RegisterAction(gtid, s.stockAdapter)
+	_ = s.tccManager.RegisterAction(gtid, s.couponAdapter)
+	_ = s.tccManager.RegisterAction(gtid, s.orderAdapter)
+	tx := s.tccManager.NewTransaction(gtid, order)
+	c, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := s.tccManager.RunTransaction(c, tx); err != nil {
+		// 处理事务执行失败
+		fmt.Printf("Transaction failed: %v\n", err)
+	} else {
+		fmt.Println("Transaction completed successfully")
 	}
-	_ = s.tccManage.Succeed(ctx, "seckill"+tccId)
-	return strconv.FormatInt(order.OrderId, 10), nil
 }
 
 func (s *seckill) Cancel(ctx context.Context) (string, error) {

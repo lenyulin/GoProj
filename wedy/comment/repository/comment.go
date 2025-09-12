@@ -16,6 +16,7 @@ type CommentRepository interface {
 	Get(ctx context.Context, id int64, page int64) ([]domain.Comment, error)
 	IncrLikeCnt(ctx context.Context, id int64, vid int64, uid int64) error
 }
+
 type CompositeCommentCache struct {
 	primary   comment.Cache // 本地主缓存
 	secondary comment.Cache // 二级redis缓存

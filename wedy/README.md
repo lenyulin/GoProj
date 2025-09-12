@@ -5,11 +5,11 @@
 @set GOARCH=arm64
 
 @go build -o WeDY ./
-
+@go build -o WeDY ./
 @docker rmi -f leiyulin/wedy:v0.0.1
 
 @docker build -t leiyulin/wedy:v0.0.1
-
+@_docker build -t lenyulin/anqi:v0.0.1_
 
 C:\Users\lyl69\GolandProjects\GoProj>cd ./wedy
 
@@ -20,3 +20,6 @@ C:\Users\lyl69\GolandProjects\GoProj\wedy>set GOARCH=arm64
 C:\Users\lyl69\GolandProjects\GoProj\wedy>set CGO_ENABLED=0
 
 C:\Users\lyl69\GolandProjects\GoProj\wedy>go build -o wedy ./
+
+docker build -t lenyulin/blazor-app:latest .
+lenyulin/blazor-app:latest
