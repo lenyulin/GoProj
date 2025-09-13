@@ -38,7 +38,7 @@ func (s *SaramaSyncProducer) CommentIncrLikeCntEvent(evt CommentLikeEvent) error
 		Topic: TopicCommentIncrLikeCntEvent,
 		Value: sarama.StringEncoder(val),
 	})
-	if err != nil {
+	for err != nil {
 		evt.partition = append(evt.partition, strconv.Itoa(int(partition)))
 		evt.topic = TopicCommentIncrLikeCntEvent
 		evt.offset = append(evt.offset, strconv.Itoa(int(offset)))
@@ -48,7 +48,6 @@ func (s *SaramaSyncProducer) CommentIncrLikeCntEvent(evt CommentLikeEvent) error
 			return ErrProduceSubmitFailure
 		}
 		err = s.CommentIncrLikeCntEvent(evt)
-		return err
 	}
 	return nil
 }

@@ -62,8 +62,8 @@ func (m *TCCManager) RegisterAction(gtid string, action TccAction) error {
 	defer m.mu.Unlock()
 
 	tx, exists := m.transactions[gtid]
-	if !exists {
-		return errors.New("transaction not found")
+	if exists {
+		return errors.New("transaction exists")
 	}
 
 	tx.Actions = append(tx.Actions, action)
