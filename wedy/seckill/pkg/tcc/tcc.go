@@ -8,16 +8,6 @@ import (
 	"time"
 )
 
-type TransactionStatus string
-
-const (
-	StatusTrying     TransactionStatus = "TRYING"     // 尝试中
-	StatusConfirming TransactionStatus = "CONFIRMING" // 确认中
-	StatusCanceling  TransactionStatus = "CANCELING"  // 取消中
-	StatusCompleted  TransactionStatus = "COMPLETED"  // 已完成
-	StatusCanceled   TransactionStatus = "CANCELED"   // 已取消
-)
-
 type Transaction struct {
 	ID        string
 	Status    TransactionStatus
@@ -157,4 +147,12 @@ func (m *TCCManager) updateStatus(gtid string, status TransactionStatus) {
 		tx.Status = status
 		tx.UpdatedAt = time.Now()
 	}
+}
+
+func (m *TCCManager) CheckTransactionStatus(ctx context.Context, gtid string) (TransactionStatus, error) {
+	tx, exists := m.transactions[gtid]
+	if !exists {
+		return "", errors.New("transaction does not exist")
+	}
+	return tx.Status, nil
 }

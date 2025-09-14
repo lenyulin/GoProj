@@ -3,8 +3,7 @@ package service
 import (
 	"GoProj/wedy/pkg/logger"
 	"GoProj/wedy/seckill/domain"
-	"GoProj/wedy/seckill/events"
-	"GoProj/wedy/seckill/pkg/tcc"
+	event "GoProj/wedy/seckill/events"
 	"context"
 	"fmt"
 	"strconv"
@@ -21,32 +20,24 @@ type seckill struct {
 	biz      int64
 	bizId    int64
 	log      logger.LoggerV1
-	adaptors []tcc.TccAction
-	//stockAdapter  *tcc3.InventoryAdapter
-	//couponAdapter *tcc3.CouponAdapter
-	//orderAdapter  *tcc3.OrderAdapter
-	tccManager tcc.TCCManagerV1
-	producer   events.TCCMegProducer
+	producer event.TCCMegProducer
 }
 
 func (s *seckill) tccIds(orderId int64) string {
 	return fmt.Sprintf(":%d:%d:%d", s.biz, s.bizId, orderId)
 }
-func NewSeckillSvc(biz int64, bizId int64, log logger.LoggerV1, adaptors []tcc.TccAction) Seckill {
+
+func NewSeckillSvc(biz int64, bizId int64, log logger.LoggerV1) Seckill {
 	return &seckill{
-		biz:      biz,
-		bizId:    bizId,
-		log:      log,
-		adaptors: adaptors,
+		biz:   biz,
+		bizId: bizId,
+		log:   log,
 	}
 }
-func (m *seckill) add(gtid string, Data interface{}) error {
-	id, err := strconv.ParseInt(gtid, 10, 64)
-	if err != nil {
-		return err
-	}
-	err = m.producer.TCCMangerProduceAddTCCEvent(events.AddTCCEvent{
-		TCCIdx:    id,
+func (m *seckill) add(ctx context.Context, gtid string, Data interface{}) error {
+	err := m.producer.TCCMangerProduceAddTCCEvent(event.AddTCCEvent{
+		TCCIdx:    gtid,
+		Status:    "TRYING",
 		TimeStamp: time.Now().UnixMilli(),
 		DATA:      Data,
 	})
@@ -54,7 +45,7 @@ func (m *seckill) add(gtid string, Data interface{}) error {
 }
 func (s *seckill) Processing(ctx context.Context, order domain.Order) (string, error) {
 	gtid := s.tccIds(order.OrderId)
-	err := s.add(gtid, order)
+	err := s.add(ctx, gtid, order)
 	if err != nil {
 		return "", err
 	}

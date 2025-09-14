@@ -1,10 +1,11 @@
-package events
+package event
 
 import (
 	"GoProj/wedy/pkg/logger"
 	"GoProj/wedy/pkg/saramax"
 	"GoProj/wedy/seckill/pkg/tcc"
 	"context"
+	"errors"
 	"github.com/IBM/sarama"
 	"time"
 )
@@ -42,5 +43,14 @@ func (i *TCCManagerWatchEventConsumer) Start() error {
 func (i *TCCManagerWatchEventConsumer) Consume(msg *sarama.ConsumerMessage, event AddTCCEvent) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	return i.tccManager.AddNewTransactionTask(ctx, event.TCCIdx, event.DATA)
+	switch event.Status {
+	case StatusTrying:
+		return i.tccManager.Try(ctx, event.TCCIdx, event.DATA)
+	case StatusConfirming:
+		return i.tccManager.Confirm(ctx, event.TCCIdx)
+	case StatusCanceling:
+		return i.tccManager.Cancel(ctx, event.TCCIdx)
+	default:
+		return errors.New(string("unknow status " + event.Status))
+	}
 }

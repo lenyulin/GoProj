@@ -3,7 +3,6 @@ package tcc
 import (
 	"context"
 	"fmt"
-	"strconv"
 )
 
 type TCCManagerV1 struct {
@@ -18,11 +17,11 @@ func NewTCCMangaerV1(manager *TCCManager, adaptors []TccAction) *TCCManagerV1 {
 	}
 }
 
-func (m *TCCManagerV1) Try(ctx context.Context, gtid int64, data interface{}) error {
+func (m *TCCManagerV1) Try(ctx context.Context, gtid string, data interface{}) error {
 	for _, adaptor := range m.adaptors {
-		_ = m.manager.RegisterAction(strconv.FormatInt(gtid, 10), adaptor)
+		_ = m.manager.RegisterAction(gtid, adaptor)
 	}
-	tx := m.manager.NewTransaction(strconv.FormatInt(gtid, 10), data)
+	tx := m.manager.NewTransaction(gtid, data)
 	if err := m.manager.RunTransaction(ctx, tx); err != nil {
 		////处理事务执行失败
 		fmt.Printf("Transaction failed: %v\n", err)
@@ -33,32 +32,20 @@ func (m *TCCManagerV1) Try(ctx context.Context, gtid int64, data interface{}) er
 	}
 }
 
-func (m *TCCManagerV1) Confirm(ctx context.Context, gtid int64) error {
-	for _, adaptor := range m.adaptors {
-		_ = m.manager.RegisterAction(strconv.FormatInt(gtid, 10), adaptor)
-	}
-	tx := m.manager.NewTransaction(strconv.FormatInt(gtid, 10), data)
-	if err := m.manager.RunTransaction(ctx, tx); err != nil {
-		////处理事务执行失败
-		fmt.Printf("Transaction failed: %v\n", err)
+func (m *TCCManagerV1) Confirm(ctx context.Context, gtid string) error {
+	status, err := m.manager.CheckTransactionStatus(ctx, gtid)
+	if err != nil {
 		return err
-	} else {
-		fmt.Println("Transaction completed successfully")
-		return nil
 	}
+	if status == StatusCompleted {
+		// Generate Pay Order
+	}
+	if status == StatusCanceled {
+		// Canceled
+	}
+	return nil
 }
 
-func (m *TCCManagerV1) Cancel(ctx context.Context, gtid int64) error {
-	for _, adaptor := range m.adaptors {
-		_ = m.manager.RegisterAction(strconv.FormatInt(gtid, 10), adaptor)
-	}
-	tx := m.manager.NewTransaction(strconv.FormatInt(gtid, 10), data)
-	if err := m.manager.RunTransaction(ctx, tx); err != nil {
-		////处理事务执行失败
-		fmt.Printf("Transaction failed: %v\n", err)
-		return err
-	} else {
-		fmt.Println("Transaction completed successfully")
-		return nil
-	}
+func (m *TCCManagerV1) Cancel(ctx context.Context, gtid string) error {
+	panic("implement me")
 }

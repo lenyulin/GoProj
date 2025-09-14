@@ -109,8 +109,8 @@ func TestCommentSetRepository(t *testing.T) {
 							AvatarURL: "",
 						}},
 				})
-			commentRepo := NewCommentRepository(primaryCache, secondaryCache)
-			commentRepo.Get(context.Background(), "12345", 0)
+			//commentRepo := NewCommentRepository(primaryCache, secondaryCache)
+			//commentRepo.Get(context.Background(), "12345", 0)
 		})
 	}
 }

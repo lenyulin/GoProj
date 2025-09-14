@@ -1,6 +1,7 @@
 package event
 
 import (
+	"GoProj/wedy/seckill/pkg/tcc"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,20 +14,9 @@ import (
 type TCCMegProducer interface {
 	TCCMangerProduceAddTCCEvent(evt AddTCCEvent) error
 }
-type AddTCCEvent struct {
-	TCCIdx    string
-	Partition int32
-	Offset    string
-	TimeStamp int64
-	Topic     string
-	Retry     int64
-	DATA      interface{}
-	Status    string
-}
 
 const (
 	MaxTCCMangerProduceRetry = 3
-	TopicWatchEvent          = "tcc_manger_watch"
 )
 
 var (
@@ -38,7 +28,10 @@ type SaramaSyncProducer struct {
 	redis    *redis.Client
 }
 
+var PartitionCount = 3
+
 func (s *SaramaSyncProducer) AddTCCEvent(evt AddTCCEvent) error {
+	evt.Status = TransactionStatus(tcc.StatusTrying)
 	val, err := json.Marshal(&evt)
 	if err != nil {
 		fmt.Println(err)
@@ -55,6 +48,7 @@ func (s *SaramaSyncProducer) AddTCCEvent(evt AddTCCEvent) error {
 		evt.Offset = strconv.Itoa(int(offset))
 		evt.Retry += 1
 		if evt.Retry == MaxTCCMangerProduceRetry {
+			//发送到死信队列
 			return ErrProduceSubmitFailure
 		}
 	}
